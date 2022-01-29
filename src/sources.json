@@ -1,0 +1,14 @@
+{
+  "sources": {
+    "games": {
+      "nintendo": [
+        {
+          "name": "eshop-prices.com",
+          "link": "https://eshop-prices.com/prices",
+          "countries": [],
+          "meta": {}
+        }
+      ]
+    }
+  }
+}

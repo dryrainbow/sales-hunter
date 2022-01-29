@@ -1,0 +1,46 @@
+version: "3.9"
+services:
+  postgres:
+    container_name: "database"
+    image: postgres:13.3
+    environment:
+      POSTGRES_DB: "sales_hunter"
+      POSTGRES_USER: "admin"
+      POSTGRES_PASSWORD: "password"
+      PGDATA: "/var/lib/postgresql/data/pgdata"
+    volumes:
+      - ../2. Init Database:/docker-entrypoint-initdb.d
+      - ./data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 4G
+    networks:
+      - app_network
+
+  api:
+    container_name: "api"
+    image: kokosso/node-sales-hunter
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+    command: "npm run debug"
+    volumes:
+      - ./:/app
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: "bridge"
