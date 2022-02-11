@@ -28,19 +28,6 @@ services:
     networks:
       - app_network
 
-  api:
-    container_name: "api"
-    image: kokosso/node-sales-hunter
-    ports:
-      - "3000:3000"
-    depends_on:
-      - postgres
-    command: "npm run debug"
-    volumes:
-      - ./:/app
-    networks:
-      - app_network
-
 networks:
   app_network:
     driver: "bridge"

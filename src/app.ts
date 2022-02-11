@@ -1,33 +1,79 @@
 import * as dotenv from 'dotenv'
-dotenv.config()
-
-require('reflect-metadata')
 import * as express from 'express'
 import {createConnection} from "typeorm";
-import ormconfig from "../ormconfig";
 import {NintendoOfficialShop} from "./sources/nintendo/api";
 import {NintendoSwitch} from "./service/crawler/NintendoSwitch";
-import gameApi from './api/game'
+import {GameRepository} from "./repository/GameRepository";
+import {SourceRepository} from "./repository/SourceRepository";
+import {SOURCE_NAMES} from "./constants/sources";
+import {SourceLogRepository} from "./repository/SourceLogRepository";
+import {createGameSearchHandler} from "./handlers/game_search/game_search";
+import {createCrawlerNintendoHandler} from "./handlers/crawler_nintendo/crawler_nintendo";
+import {TaskManager} from "./service/task_manager/TaskManager";
+import {Cache} from "./service/cache/cache";
+import {TASKS} from "./service/task_manager/tasks";
 
-const app = express()
+require('reflect-metadata')
 
-app.use('/games', gameApi)
-createConnection(ormconfig[0])
+dotenv.config()
+import ormconfig from "../ormconfig";
+import {crawlerInfoHandler} from "./handlers/crawler_info/crawler_info";
 
-app.get('/', (async (req, res) => {
-    const nintendoCrawler = new NintendoSwitch()
-    await nintendoCrawler.crawl()
 
-    res.json({})
-}))
 
-app.get('/crawler/nintend_switch/official_shop', (async (req, res) => {
-    const nintendoCrawler = new NintendoSwitch()
-    const result = await nintendoCrawler.crawl()
+function run() {
+    const app = express()
 
-    res.json(result)
-}))
+    createConnection(ormconfig[0]).then(async (connection)=>{
+        // Repositories
+        const gameRepository = connection.getCustomRepository(GameRepository)
+        const sourceRepository = connection.getCustomRepository(SourceRepository)
+        const sourceLogRepository = connection.getCustomRepository(SourceLogRepository)
 
-app.listen(Number(process.env.SERVER_PORT), process.env.SERVER_HOST, ()=> {
-    console.log(`Listen local ${process.env.SERVER_HOST}:${process.env.SERVER_PORT}`)
-})
+        // Utils
+        const cache = new Cache()
+
+        // Sources
+        const nintendoSource = await sourceRepository.get(SOURCE_NAMES.nintendo)
+
+        // Fetchers
+        const nintendoFetcher = new NintendoOfficialShop(nintendoSource)
+
+        // Crawlers
+        const nintendoCrawler = new NintendoSwitch(nintendoFetcher, gameRepository, sourceLogRepository)
+
+        // Tasks
+        const crawlerTaskManager = new TaskManager(cache, 1000)
+
+
+        // Tasks Handlers
+        crawlerTaskManager.on(TASKS.crawl, (data)=>{
+            return nintendoCrawler.crawl()
+        })
+
+
+        app.use('/games', (()=>{
+            const router = express.Router()
+
+            router.get('/search', createGameSearchHandler())
+
+            return router
+        })())
+
+        app.use('/crawler', (()=>{
+            const router = express.Router()
+
+            router.get('/nintendo', createCrawlerNintendoHandler(crawlerTaskManager))
+            router.get('/info', crawlerInfoHandler(crawlerTaskManager))
+
+            return router
+        })())
+
+
+        app.listen(Number(process.env.SERVER_PORT), process.env.SERVER_HOST, ()=> {
+            console.log(`Listen local ${process.env.SERVER_HOST}:${process.env.SERVER_PORT}`)
+        })
+    })
+}
+
+run()

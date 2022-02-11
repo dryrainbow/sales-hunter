@@ -12,7 +12,7 @@ export class SourceLog {
     url: string
 
     @Column({
-        type: 'text',
+        type: 'json',
     })
     request: string
 

@@ -1,22 +1,24 @@
-import {PlatformDepCrawler} from "./PlatformDepCrawler";
-import {NintendoOfficialShop} from "../../sources/nintendo/api";
-import {getConnection} from "typeorm";
-import {GameRepository} from "../../repository/GameRepository";
+import {ICrawler, IGameRepository, ISourceFetcher, ISourceLogger} from "../../interfaces";
+import {Game} from "../../entity/Game";
 
-export class NintendoSwitch implements PlatformDepCrawler {
+export class NintendoSwitch implements ICrawler {
+    private sourceFetcher: ISourceFetcher
+    private gameRep: IGameRepository
+    private readonly sourceLogger: ISourceLogger
+
+    constructor(sourceFetcher: ISourceFetcher, gameRep: IGameRepository, sourceLogger: ISourceLogger) {
+        this.gameRep = gameRep
+        this.sourceLogger = sourceLogger;
+        this.sourceFetcher = sourceFetcher
+    }
+
     async crawl() {
-        let newGames = []
-        const connection = getConnection()
-        const gameRepository = connection.getCustomRepository(GameRepository)
-        const nintendoOfficialApi = new NintendoOfficialShop()
-        console.log('PENDING REQUEST TO NINTENDO ESHOP')
-        const games = await nintendoOfficialApi.parse()
-        console.log(games[0])
-        console.log('START SAVING TO DATABASE')
+        const games = await this.sourceFetcher.parse(this.sourceLogger)
         for (let game of games) {
-            await gameRepository.saveOrUpdateFromNintendo(game)
+            await this.gameRep.saveOrUpdateFromNintendo(game)
         }
-
         return {count: games.length}
     }
+
+    private async parsePrices(games: Game[]) {}
 }

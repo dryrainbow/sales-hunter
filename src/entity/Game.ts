@@ -31,6 +31,9 @@ export class Game {
     @Column({type: "timestamp without time zone"})
     updatedAt: Date
 
+    @Column({type: "json", default: {}, name: "source_meta"})
+    sourceMeta: object
+
     @ManyToOne(type => Platform, platform => platform.games)
     platform: Platform
 

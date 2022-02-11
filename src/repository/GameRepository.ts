@@ -1,19 +1,20 @@
-import { EntityRepository, getCustomRepository, Like, Repository } from "typeorm";
-import { Game } from "../entity/Game";
-import { NintendoOfficialGameResult } from "../types/game";
-import { Platform } from "../entity/Platform";
-import { PlatformsSlugs } from "../types/platform";
-import { CategoryRepository } from "./CategoryRepository";
-import { logQuery } from "../utils/database";
+import {EntityRepository, getCustomRepository, Like, Repository} from "typeorm";
+import {Game} from "../entity/Game";
+import {NintendoOfficialGameResult} from "../types/game";
+import {Platform} from "../entity/Platform";
+import {PlatformsSlugs} from "../types/platform";
+import {CategoryRepository} from "./CategoryRepository";
+import {logQuery} from "../utils/database";
+import {IGameRepository} from "../interfaces";
 
 @EntityRepository(Game)
-export class GameRepository extends Repository<Game> {
+export class GameRepository extends Repository<Game> implements IGameRepository {
 
     // TODO: написать 1 метод для добавления нормализированных игр
     async saveOrUpdateFromNintendo(game: NintendoOfficialGameResult) {
         const platformRepository = this.manager.getRepository(Platform)
         const categoriesRepository = getCustomRepository(CategoryRepository)
-        const nintendoSwitchPlatform = await platformRepository.findOne({ where: { slug: PlatformsSlugs.nintendo_switch } })
+        const nintendoSwitchPlatform = await platformRepository.findOne({where: {slug: PlatformsSlugs.nintendo_switch}})
 
         const exitingGame = await this.findOne({
             where: {
@@ -25,6 +26,9 @@ export class GameRepository extends Repository<Game> {
         if (exitingGame) {
             exitingGame.image_url = game.image_url
             exitingGame.updatedAt = new Date()
+            exitingGame.sourceMeta = {
+                esShopTitleId: game.nsuid_txt
+            }
             await this.save(exitingGame)
             return exitingGame
         }
@@ -48,6 +52,9 @@ export class GameRepository extends Repository<Game> {
         newGame.updatedAt = newGame.createdAt
         newGame.description = game.product_catalog_description_s
         newGame.image_url = game.image_url
+        newGame.sourceMeta = {
+            esShopTitleId: game.nsuid_txt
+        }
         await this.save(newGame)
         return newGame
     }
