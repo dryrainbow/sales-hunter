@@ -1,4 +1,4 @@
-import {EntityRepository, getCustomRepository, Like, Repository} from "typeorm";
+import {EntityRepository, getCustomRepository, Repository} from "typeorm";
 import {Game} from "../entity/Game";
 import {NintendoOfficialGameResult} from "../types/game";
 import {Platform} from "../entity/Platform";

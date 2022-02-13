@@ -12,7 +12,8 @@
     "seed:create": "npm run typeorm -- migration:create -c seed -n ",
     "seed:generate": "npm run typeorm -- migration:generate -c seed -n ",
     "seed:run": "npm run typeorm -- migration:run -c seed",
-    "seed:revert": "npm run typeorm -- migration:revert -c seed"
+    "seed:revert": "npm run typeorm -- migration:revert -c seed",
+    "lint": "eslint . --ext .ts --fix"
   },
   "keywords": [],
   "author": "",
@@ -45,6 +46,9 @@
     "@types/express": "^4.17.13",
     "@types/node": "^17.0.0",
     "@types/selenium-webdriver": "^4.0.16",
+    "@typescript-eslint/eslint-plugin": "^5.11.0",
+    "@typescript-eslint/parser": "^5.11.0",
+    "eslint": "^8.8.0",
     "random-useragent": "^0.5.0"
   }
 }

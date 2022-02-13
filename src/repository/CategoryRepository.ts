@@ -12,7 +12,7 @@ export class CategoryRepository extends Repository<Category> {
     }
 
     async createOrUpdateCategories(slugsToNames: Record<string, string>) {
-        let slugs = Object.keys(slugsToNames)
+        const slugs = Object.keys(slugsToNames)
         const existingCategories = await this.getBySlugs(slugs)
 
         if(existingCategories.length === slugs.length) {

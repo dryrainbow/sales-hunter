@@ -14,7 +14,7 @@ export class NintendoSwitch implements ICrawler {
 
     async crawl() {
         const games = await this.sourceFetcher.parse(this.sourceLogger)
-        for (let game of games) {
+        for (const game of games) {
             await this.gameRep.saveOrUpdateFromNintendo(game)
         }
         return {count: games.length}

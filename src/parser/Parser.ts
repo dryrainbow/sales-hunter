@@ -4,7 +4,7 @@ import {prepareRaw} from './nintendo/prepare-raw.js'
 const pako = require('pako');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 const fs = require('fs');
-var userAgent = require('user-agents');
+const userAgent = require('user-agents');
 const puppeteerService = require('./nintendo/crawler')
 puppeteer.use(StealthPlugin());
 
